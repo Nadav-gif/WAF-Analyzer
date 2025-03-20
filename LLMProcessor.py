@@ -106,16 +106,10 @@ class LLMProcessor:
         response = requests.post(self.api_url, headers=headers, json=payload, timeout=30)  # Sends an HTTP POST request to the Groq API to get an LLM-generated response
         # Parse response
         if response.status_code == 200:
-            #try:
             response_json = response.json()  # Converts the response to a python dictionary
             llm_content = response_json["choices"][0]["message"]["content"].strip()  # Extracts the actual text response from the API
-            print(llm_content)
             structured_response = json.loads(llm_content)
             return structured_response  # Return structured JSON directly
-            #except Exception as e:
-                #print(f"Error: Invalid JSON format in LLM response for {attacker_ip}")
-            #    print(e)
-             #   return None
         else:
             print(f"API Error: {response.status_code}")
             return None
