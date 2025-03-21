@@ -1,11 +1,17 @@
 import json
+import os
 from Filter import Filter  # Import the Filter class
 from LLMProcessor import LLMProcessor  # Import the LLMProcessor class
 
-# Define the path to the WAF log file
-file_path = r"C:\Users\nadav\RadwareProject\security_events.csv"
-# API key for authentication
-api_key = "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"
+# Retrieve file path from environment variable
+file_path = os.getenv("FILE_PATH")
+if not file_path:
+    raise ValueError("File path is missing! Make sure to provide --file_path when running the script.")
+
+# Retrieve API key from environment variable
+api_key = os.getenv("API_KEY")
+if not api_key:
+    raise ValueError("API Key is missing! Make sure to provide --api_key when running the script.")
 
 # Initialize the Filter class to process and filter WAF logs
 filter_obj = Filter(file_path)
@@ -36,7 +42,7 @@ for ip, logs in filter_obj.aggregated_attackers.items():
             # Ensure attack_types is formatted as a single-line list
             attack_summary_json["attack_types"] = "[" + ", ".join(attack_summary_json.get("attack_types", [])) + "]"
 
-            print(json.dumps(attack_summary_json, indent=4))
+            print(json.dumps(attack_summary_json, indent=0))
             success = True
         else:
             print(f"\nNo valid response for attacker: {ip}")

@@ -2,12 +2,25 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+import os
 from Filter import Filter
 from LLMProcessor import LLMProcessor
 from datetime import datetime
 
 # Streamlit UI
 st.title("🔍 Attacker Analysis Dashboard")
+
+# Retrieve API key from environment variable
+api_key = os.getenv("API_KEY")
+if not api_key:
+    st.error("API Key is missing! Make sure to provide --api_key when running the script.")
+    st.stop()
+
+# Retrieve file path from environment variable
+file_path = os.getenv("FILE_PATH")
+if not file_path:
+    st.error("File path is missing! Make sure to provide --file_path when running the script.")
+    st.stop()
 
 # Initialize session state for attack summaries
 if "attack_summaries" not in st.session_state:
@@ -19,17 +32,20 @@ with st.spinner("Processing logs and generating attack summaries..."):
     if not st.session_state.attack_summaries:
         # Constants
         file_path = r"C:\Users\nadav\RadwareProject\security_events.csv"  # Your WAF log file path
-        api_key = "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"
 
         # Initialize the Filter and LLMProcessor classes
         filter_obj = Filter(file_path)
         llm = LLMProcessor(api_key)
 
-        # Run filtering and aggregation processes
-        filter_obj.create_ip_activities()
-        filter_obj.filter_logs()
-        filter_obj.aggregate_by_ip()
-        filter_obj.detect_attack_sequences()
+        if "filtered_logs" not in st.session_state:
+            filter_obj = Filter(file_path)
+            filter_obj.create_ip_activities()
+            filter_obj.filter_logs()
+            filter_obj.aggregate_by_ip()
+            filter_obj.detect_attack_sequences()
+
+            # Store filtered logs in session state to avoid recomputation
+            st.session_state.filtered_logs = filter_obj.filtered
 
         # Generate attack summaries using LLM
         attack_summaries = {}
@@ -59,27 +75,35 @@ if "attacker_ip" in df.columns:
 df.index.name = "attacker_ip"
 
 # IP Filter
-selected_ip = st.selectbox("Filter by Attacker IP:", ["All"] + list(st.session_state.attack_summaries.keys()))
+# selected_ip = st.selectbox("Filter by Attacker IP:", ["All"] + list(st.session_state.attack_summaries.keys())) REMOVE
+
+# Search Box for Attacker IPs
+search_ip = st.text_input("🔍 Search for Attacker IP:", "")
+
+# Dynamically filter IPs based on search input
+filtered_ips = [ip for ip in st.session_state.attack_summaries.keys() if search_ip in ip]
+
+# Drop-down menu only showing filtered IPs
+selected_ip = st.selectbox("Filter by Attacker IP:", ["All"] + filtered_ips)
 
 # Display filtered results
 if selected_ip == "All":
-    st.write(df)
+    filtered_df = df[df.index.str.contains(search_ip, na=False)] if search_ip else df
+    st.write(filtered_df)
 else:
-    st.write(df.loc[selected_ip])
+    st.write(df.loc[[selected_ip]])
 
 # Attack frequency graph
 st.subheader("📈 Attack Frequency Over Time")
 
 # Extract timestamps from filtered logs
-attack_timestamps = [log["receivedTimeFormatted"] for log in filter_obj.filtered]
-print(type(attack_timestamps[0]))
+attack_timestamps = [log["receivedTimeFormatted"] for log in st.session_state.filtered_logs]
 
 # Convert timestamps to datetime objects
 attack_timestamps = [
     ts if isinstance(ts, datetime) else datetime.strptime(ts, "%d/%m/%Y %H:%M")
     for ts in attack_timestamps
 ]
-
 
 # Create DataFrame for time-based aggregation
 df_time = pd.DataFrame({"timestamp": attack_timestamps})
