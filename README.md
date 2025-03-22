@@ -1,6 +1,6 @@
 # 🔐 WAF Log Analyzer with LLM-Powered Attack Summarization
 
-The project analyzes Web Application Firewall (WAF) logs to detect and summarize malicious activity, using rule-based filtering and a Large Language Model (LLM). It includes an interactive Streamlit dashboard and also supports JSON output for automation and integration.
+The project analyzes Web Application Firewall (WAF) logs to detect and summarize malicious activity, using rule-based filtering and a Large Language Model (LLM).
 
 ---
 
