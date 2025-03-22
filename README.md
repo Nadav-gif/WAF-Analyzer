@@ -26,9 +26,17 @@ pip install -r requirements.txt
 
 ## 🚀 How to Run
 
+When running the project, you must provide the following **three required arguments**:
+
+| Argument       | Description                                                                 |
+|----------------|-----------------------------------------------------------------------------|
+| `--output`     | Output mode: `UI` for the interactive dashboard or `JSON` for console output. |
+| `--api_key`    | Your API key for authenticating with the LLM (Groq) API.                    |
+| `--file_path`  | Path to the WAF log CSV file you want to analyze.
+
 ### Option 1: Streamlit UI Mode
 ```bash
-python proj.py --output UI --api_key YOUR_GROQ_API_KEY --file_path path/to/security_events.csv
+python proj.py --output UI --api_key GROQ_API_KEY --file_path path/to/security_events.csv
 ```
 🖼 Example Output:
 ![image](https://github.com/user-attachments/assets/8ac94162-4302-4913-8e9f-d8df915fd499)
@@ -36,7 +44,7 @@ python proj.py --output UI --api_key YOUR_GROQ_API_KEY --file_path path/to/secur
 
 ### Option 2: JSON Output Mode
 ```bash
-python proj.py --output JSON --api_key YOUR_GROQ_API_KEY --file_path path/to/security_events.csv
+python proj.py --output JSON --api_key GROQ_API_KEY --file_path path/to/security_events.csv
 ```
 🖼 Example Output:
 ![image](https://github.com/user-attachments/assets/f08eea90-16f1-4148-bcc6-19c90f956b9f)
