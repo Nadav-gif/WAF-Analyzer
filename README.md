@@ -15,7 +15,7 @@ The project analyzes Web Application Firewall (WAF) logs to detect and summarize
 ## ⚙️ Requirements
 - Python 3.10+
 - `requests`, `pandas`, `matplotlib`, `streamlit`
-- Groq API key (free tier available)
+- Groq API key
 
 Install dependencies:
 ```bash
