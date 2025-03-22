@@ -1,10 +1,10 @@
-import requests
 import json
+import requests
 
 
 class LLMProcessor:
-    def __init__(self, api_key):  # Understand this fields !!!
-        """Initialize LLMProcessor with Hugging Face API key"""
+    def __init__(self, api_key):
+        """Initialize LLMProcessor with Groq API key"""
         self.api_key = api_key  # Authenticate requests to Groq API
         self.api_url = "https://api.groq.com/openai/v1/chat/completions"  # Endpoint URL where requests are sent
         self.model = "llama-3.1-8b-instant"  # The LLM model groq should use for text generation
@@ -12,19 +12,13 @@ class LLMProcessor:
     def attack_summary(self, attacker_ip, attacker_logs, detected_sequence_status, jwt_brute_force_status, access_control_brute_force_status):
         """Send data to LLM and handle the response"""
 
-        # Extract relevant fields from logs and shorten details
-        # {
-        #     "receivedTimeFormatted": "13/03/2025 9:41",
-        #     "violationCategory": "SQL Injection",
-        #     "uri": "/login",
-        #     "severity": "High"
-        # }
+        # Format logs for LLM
         processed_logs = [
             f"Description:{log['description']}, Received time:{log['receivedTimeFormatted']}, Violation Type:{log['violationType']} Target URI: {log.get('uri', 'N/A')}"
             for log in attacker_logs
         ]
 
-        # Define the structured prompt
+        # Prompt for LLM
         prompt = f"""
         You are a cybersecurity expert analyzing security logs from a Web Application Firewall (WAF). 
         Your task is to **identify attack patterns, assess severity correctly, and suggest practical mitigations**.
@@ -104,6 +98,7 @@ class LLMProcessor:
         }
 
         response = requests.post(self.api_url, headers=headers, json=payload, timeout=30)  # Sends an HTTP POST request to the Groq API to get an LLM-generated response
+
         # Parse response
         if response.status_code == 200:
             response_json = response.json()  # Converts the response to a python dictionary

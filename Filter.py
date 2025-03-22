@@ -1,10 +1,9 @@
 import csv
-from datetime import datetime, timedelta
 
 
 class Filter:
     def __init__(self, file_path):
-        """Storage for filtering decisions"""
+        """Initialize the filter with log file path and prepare data structures"""
         self.file_path = file_path
         self.ip_activities = {}  # Dictionary with IPs as keys and a list of their activities
         self.filtered = []  # List of logs that passed filtering
@@ -12,7 +11,6 @@ class Filter:
         self.access_control_brute_force_attackers = set()  # Set of IPs with excessive Access Control violations
         self.aggregated_attackers = {}  # Dictionary with filtered logs grouped by IP
         self.multi_step_attacks = {}  # Store detected attack sequences
-        self.waves_attackers = []  # To add a time factor - find different attacks from same IP
 
     def create_ip_activities(self):
         """Creates a dictionary of activities per IP"""
@@ -29,8 +27,7 @@ class Filter:
                 self.ip_activities[ip].append(attack_type)
 
     def filter_logs(self):
-        """Processes and filters logs"""
-
+        """Applies filtering rules to logs"""
         low_priority_violations = {"JWT Validation Failed", "Invalid Token", "Session Expired", "Access Control"}
         sensitive_endpoints = {"/.env", "/config.json", "/.git/config", "/admin/", "/api/keys"}  # Sensitive paths
         jwt_threshold = 10  # Flag brute-force attackers if JWT failures ≥ 10
@@ -43,6 +40,7 @@ class Filter:
                 ip = row["externalIp"]
                 attack_type = row["violationCategory"]
                 request_uri = row["uri"]
+
                 attack_list = self.ip_activities[ip]
                 jwt_failures = attack_list.count("JWT Validation Failed")
                 access_control_failures = attack_list.count("Access Control")
@@ -67,7 +65,7 @@ class Filter:
                     self.filtered.append(row)
 
     def aggregate_by_ip(self):
-        """Aggregates incidents by IP"""
+        """Groups all filtered logs by IP"""
         for log in self.filtered:
             ip = log["externalIp"]  # extract IP from log
 

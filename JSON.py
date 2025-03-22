@@ -1,5 +1,6 @@
 import json
 import os
+
 from Filter import Filter  # Import the Filter class
 from LLMProcessor import LLMProcessor  # Import the LLMProcessor class
 
@@ -13,13 +14,11 @@ api_key = os.getenv("API_KEY")
 if not api_key:
     raise ValueError("API Key is missing! Make sure to provide --api_key when running the script.")
 
-# Initialize the Filter class to process and filter WAF logs
+# Initialize classes
 filter_obj = Filter(file_path)
-# Initialize the LLMProcessor class to generate attack summaries
 llm = LLMProcessor(api_key)
 
-# Run the filtering process
-# After this, filter_obj's filtered, aggregated_attackers and multi_step_attacks are good
+# Run the filtering and aggregation process
 filter_obj.create_ip_activities()
 filter_obj.filter_logs()
 filter_obj.aggregate_by_ip()
@@ -31,12 +30,18 @@ for ip, logs in filter_obj.aggregated_attackers.items():
     jwt_brute_force_status = ip in filter_obj.jwt_brute_force_attackers
     access_control_brute_force_status = ip in filter_obj.access_control_brute_force_attackers
 
-    success = False  # Make sure we got a response of the IP
+    success = False  # Make sure we got a response for the IP
 
-    # Make sure we don't skip attacker if we didn't get a response
+    # Make sure we don't skip attackers if we didn't get a response
     while not success:
         # Send logs and additional info to LLM
-        attack_summary_json = llm.attack_summary(ip, logs, detected_sequence_status, jwt_brute_force_status, access_control_brute_force_status)
+        attack_summary_json = llm.attack_summary(
+            ip,
+            logs,
+            detected_sequence_status,
+            jwt_brute_force_status,
+            access_control_brute_force_status
+        )
 
         if attack_summary_json:
             # Ensure attack_types is formatted as a single-line list

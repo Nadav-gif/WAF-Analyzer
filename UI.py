@@ -1,16 +1,17 @@
+import os
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-import os
+
+from datetime import datetime
 from Filter import Filter
 from LLMProcessor import LLMProcessor
-from datetime import datetime
 
-# Streamlit UI
+# ------------------------ Streamlit Title ------------------------
 st.title("🔍 Attacker Analysis Dashboard")
 
-# Retrieve API key from environment variable
+# ------------------------ Environment Variable Checks ------------------------
 api_key = os.getenv("API_KEY")
 if not api_key:
     st.error("API Key is missing! Make sure to provide --api_key when running the script.")
@@ -22,18 +23,15 @@ if not file_path:
     st.error("File path is missing! Make sure to provide --file_path when running the script.")
     st.stop()
 
-# Initialize session state for attack summaries
+# ------------------------ Session State Initialization ------------------------
 if "attack_summaries" not in st.session_state:
     st.session_state.attack_summaries = {}
 
 # Show loading animation while data is being processed
 with st.spinner("Processing logs and generating attack summaries..."):
-    # Only run filtering and LLM analysis if we haven't done it before
+    # Only run filtering and LLM analysis if not done it before
     if not st.session_state.attack_summaries:
-        # Constants
-        file_path = r"C:\Users\nadav\RadwareProject\security_events.csv"  # Your WAF log file path
-
-        # Initialize the Filter and LLMProcessor classes
+        # Initialize classes
         filter_obj = Filter(file_path)
         llm = LLMProcessor(api_key)
 
@@ -54,10 +52,16 @@ with st.spinner("Processing logs and generating attack summaries..."):
             jwt_brute_force_status = ip in filter_obj.jwt_brute_force_attackers
             access_control_brute_force_status = ip in filter_obj.access_control_brute_force_attackers
 
-            # Ensure we get a valid response from the LLM
-            success = False
+            success = False   # Make sure we got a response for the IP
+
             while not success:
-                attack_summary_json = llm.attack_summary(ip, logs, detected_sequence_status, jwt_brute_force_status, access_control_brute_force_status)
+                attack_summary_json = llm.attack_summary(
+                    ip,
+                    logs,
+                    detected_sequence_status,
+                    jwt_brute_force_status,
+                    access_control_brute_force_status
+                )
                 if attack_summary_json:
                     attack_summaries[ip] = {"attacker_ip": ip, **attack_summary_json}
                     success = True
@@ -65,7 +69,7 @@ with st.spinner("Processing logs and generating attack summaries..."):
             # Save results in session state
             st.session_state.attack_summaries = attack_summaries
 
-# Convert stored attack summaries to a DataFrame
+# ------------------------ Attack Summary Table ------------------------
 df = pd.DataFrame.from_dict(st.session_state.attack_summaries, orient="index")
 # If 'attacker_ip' exists as a column and as the index, drop the column version
 if "attacker_ip" in df.columns:
@@ -74,8 +78,7 @@ if "attacker_ip" in df.columns:
 # Ensure attacker_ip is set as the index for better presentation
 df.index.name = "attacker_ip"
 
-# IP Filter
-# selected_ip = st.selectbox("Filter by Attacker IP:", ["All"] + list(st.session_state.attack_summaries.keys())) REMOVE
+# ------------------------ IP Filter ------------------------
 
 # Search Box for Attacker IPs
 search_ip = st.text_input("🔍 Search for Attacker IP:", "")
@@ -93,7 +96,7 @@ if selected_ip == "All":
 else:
     st.write(df.loc[[selected_ip]])
 
-# Attack frequency graph
+# ------------------------ Attack Frequency Graph ------------------------
 st.subheader("📈 Attack Frequency Over Time")
 
 # Extract timestamps from filtered logs
