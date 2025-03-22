@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
 from datetime import datetime
-from Filter import Filter
-from LLMProcessor import LLMProcessor
+from filter import Filter
+from llm_processor import LLMProcessor
 
 # ------------------------ Streamlit Title ------------------------
 st.title("🔍 Attacker Analysis Dashboard")

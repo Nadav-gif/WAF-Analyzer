@@ -3,19 +3,19 @@ import subprocess
 import sys
 import os
 
+from json_runner import json_runner
+
 
 def run_json_mode(api_key, file_path):
     """Runs the project in JSON mode"""
-    os.environ["API_KEY"] = api_key  # Pass API key as an environment variable
-    os.environ["FILE_PATH"] = file_path  # Pass file path as an environment variable
-    import JSON  # Trigger execution of JSON output script
+    json_runner(api_key, file_path)
 
 
 def run_ui_mode(api_key, file_path):
     """Run the project in UI mode using Streamlit"""
     os.environ["API_KEY"] = api_key  # Pass API key as an environment variable
     os.environ["FILE_PATH"] = file_path
-    subprocess.run([sys.executable, "-m", "streamlit", "run", "UI.py"], check=True)  # Runs UI.py
+    subprocess.run([sys.executable, "-m", "streamlit", "run", "ui_runner.py"], check=True)  # Runs UI
 
 
 def main():
