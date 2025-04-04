@@ -54,13 +54,13 @@ class Filter:
                         # Access Control violations on sensitive endpoints
                         self.filtered.append(row)
 
-                if len(set(self.ip_activities[ip])) > 1:
+                if len(set(self.ip_activities[ip])) > 1 and attack_type != "Access Control":
                     # IP has multiple different attack types
                     self.filtered.append(row)
-                elif jwt_failures >= jwt_threshold:
+                if jwt_failures >= jwt_threshold:
                     # Excessive JWT failures from the same IP (Possible brute-force attack)
                     self.jwt_brute_force_attackers.add(ip)  # Track JWT brute-force attackers
-                elif attack_type not in low_priority_violations:
+                if attack_type not in low_priority_violations:
                     # Attack is NOT in low-priority list, so we keep it
                     self.filtered.append(row)
 
@@ -116,3 +116,13 @@ class Filter:
                     # Ensure account takeover happens AFTER brute-force
                     if brute_force_time and timestamp > brute_force_time:
                         self.multi_step_attacks[ip] = "Brute-Force - Account Takeover"
+
+                # Detect Brute-Force - Exploitation
+                if attack_type in EXPLOIT_ATTACKS and found_brute_force:
+                    if brute_force_time and timestamp > brute_force_time:
+                        self.multi_step_attacks[ip] = "Brute-Force - Exploitation"
+
+                # Detect Reconnaissance - Brute-Force
+                if attack_type in BRUTE_FORCE_ATTACKS and found_recon:
+                    if recon_time and timestamp > recon_time:
+                        self.multi_step_attacks[ip] = "Reconnaissance - Brute-Force"
